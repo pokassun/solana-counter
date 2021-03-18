@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import { Button } from "@components";
+import { Button, ButtonRadius } from "@components";
 import { Wallet } from "src/solana/wallet";
 import { SOLANA_NETWORK, WALLET_PROVIDER } from "src/solana/network";
 import { CounterProgram } from "src/program/counter";
@@ -83,48 +83,45 @@ export const Main: React.FC = () => {
       </div>
       <div className="container mx-auto flex flex-col items-center py-8">
         <div className="flex flex-row space-x-12 py-6 items-center justify-center">
-          <Button
-            type="button"
-            className="rounded-full shadow w-14 h-14 text-5xl pb-1"
-            onClick={handleIncrement}
-            disabled={!isConnected}>
+          <ButtonRadius type="button" onClick={handleIncrement} disabled={!isConnected}>
             +
-          </Button>
+          </ButtonRadius>
           <p className="text-8xl">{counterValue}</p>
-          <Button
-            type="button"
-            className="rounded-full shadow w-14 h-14 text-5xl pb-1"
-            onClick={handleDecrement}
-            disabled={!isConnected}>
+          <ButtonRadius type="button" onClick={handleDecrement} disabled={!isConnected}>
             -
-          </Button>
+          </ButtonRadius>
         </div>
         <div className="flex flex-row space-x-2 my-4">
           {!isConnected && (
-            <Button type="button" className="py-2 px-4" onClick={handleConnect}>
+            <Button type="button" onClick={handleConnect}>
               Connect
             </Button>
           )}
           {isConnected && (
-            <Button type="button" className="py-2 px-4" onClick={handleDisconnect}>
+            <Button type="button" warning onClick={handleDisconnect}>
               Disconnect
             </Button>
           )}
         </div>
-        <div className="my-4 space-y-2">
+        <div className="my-4 space-y-2 border p-6">
           <div>
             Status:{" "}
             <span className={isConnected ? "text-green-500" : "text-gray-600"}>
               {isConnected ? "Connected" : "Disconnected"}
             </span>
           </div>
-          {/* <div>
-            Balance:{" "}
-          </div> */}
+          {wallet?.publicAddress && (
+            <div>
+              Address: <span className="text-gray-600">{wallet.publicAddress}</span>
+            </div>
+          )}
+          {!isConnected && (
+            <p className="italic text-gray-500">
+              Connect your wallet to increment or decrement the counter
+            </p>
+          )}
         </div>
-        <p className="w-full text-left text-gray-400 py-4">
-          Connect your wallet to increment or decrement the counter
-        </p>
+
         <div className="w-full">
           <h2 className="mt-4 mb-2 text-2xl">Logs</h2>
           <div className="border bg-gray-100 p-4">

@@ -63,8 +63,6 @@ export class Wallet extends EventEmitter {
       (e.origin === this._providerUrl.origin && e.source === this._popup)
     ) {
       if (e.data.method === "connected") {
-        console.log("e.data.params", e.data.params);
-
         const newPublicKey = new PublicKey(e.data.params.publicKey);
         if (!this._publicKey || !this._publicKey.equals(newPublicKey)) {
           if (this._publicKey && !this._publicKey.equals(newPublicKey)) {

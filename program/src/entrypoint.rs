@@ -1,32 +1,26 @@
 use byteorder::{ByteOrder, LittleEndian};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint,
-    entrypoint::ProgramResult,
-    msg,
-    pubkey::Pubkey,
-};
+use solana_program::{account_info::{next_account_info, AccountInfo}, entrypoint, entrypoint::ProgramResult, msg, program_error::ProgramError, pubkey::Pubkey};
 
 // Declare and export the program's entrypoint
 entrypoint!(process_instruction);
 
 // Program entrypoint's implementation
 fn process_instruction(
-    _program_id: &Pubkey,     // Public key of the program
+    program_id: &Pubkey,     // Public key of the program
     accounts: &[AccountInfo], // data accounts
     instruction_data: &[u8],  // 1 = increment, 2 = decrement
 ) -> ProgramResult {
-    msg!("counter program entrypoint");
+    msg!("counter program process_instruction");
 
     let accounts_iter = &mut accounts.iter();
 
     let account = next_account_info(accounts_iter)?;
 
     // The account must be owned by the program in order to modify its data
-    // if account.owner != program_id {
-    //     msg!("Greeted account does not have the correct program id");
-    //     return Err(ProgramError::IncorrectProgramId);
-    // }
+    if account.owner != program_id {
+        msg!("The account must be owned by the program in order to modify its data");
+        return Err(ProgramError::IncorrectProgramId);
+    }
 
     let mut data = account.try_borrow_mut_data()?;
 
@@ -34,14 +28,17 @@ fn process_instruction(
         let mut count = LittleEndian::read_u32(&data[0..4]);
         count += 1;
         LittleEndian::write_u32(&mut data[0..4], count);
-        msg!("counter incremented");
+        msg!("incremented");
     }
 
     if 2 == instruction_data[0] {
         let mut count = LittleEndian::read_u32(&data[0..4]);
-        count -= 1;
+        // Don't allow count to be negative
+        if count.gt(&0) {
+            count -= 1;
+        }
         LittleEndian::write_u32(&mut data[0..4], count);
-        msg!("counter decrement");
+        msg!("decremented");
     }
 
     Ok(())
@@ -51,6 +48,7 @@ fn process_instruction(
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::mem;
     use solana_program::clock::Epoch;
 
     #[test]
@@ -88,6 +86,12 @@ mod test {
         assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()[0..4]), 1);
 
         // Decrement
+
+        instruction_data[0] = 2;
+        process_instruction(&program_id, &accounts, &instruction_data).unwrap();
+        assert_eq!(LittleEndian::read_u32(&accounts[0].data.borrow()[0..4]), 0);
+
+        // Decrement (test negative number)
 
         instruction_data[0] = 2;
         process_instruction(&program_id, &accounts, &instruction_data).unwrap();
