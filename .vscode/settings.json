@@ -1,0 +1,10 @@
+{
+    "editor.formatOnSave": true,
+    "cSpell.words": [
+        "blockhash",
+        "lamports",
+        "pubkey",
+        "solana",
+        "struct"
+    ]
+}

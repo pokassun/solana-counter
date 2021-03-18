@@ -1,0 +1,11 @@
+# npm
+node_modules
+# next.js build files
+.next
+# environment variables
+.env
+.env.*
+!.env.example
+# solana
+program/target
+program_borsh/
