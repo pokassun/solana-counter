@@ -128,6 +128,10 @@ export class Wallet extends EventEmitter {
           },
           this._providerUrl.origin
         );
+
+        if (!this.autoApprove) {
+          this._popup.focus();
+        }
       }
     });
   };
@@ -179,11 +183,6 @@ export class Wallet extends EventEmitter {
       data,
       display
     });
-
-    if (!this.autoApprove || !response.didAutoApprove) {
-      this._popup.focus();
-    }
-
     const signature = bs58.decode(response.signature);
     const publicKey = new PublicKey(response.publicKey);
     return {

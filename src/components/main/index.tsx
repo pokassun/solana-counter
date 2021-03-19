@@ -19,14 +19,19 @@ export const Main: React.FC = () => {
   const [counterValue, setCounterValue] = useState(0);
 
   useEffect(() => {
+    loadCounts();
+  }, []);
+
+  useEffect(() => {
     if (selectedWallet) {
-      selectedWallet.on("connect", () => {
+      selectedWallet.once("connect", () => {
         setConnected(true);
-        addLog("Connected to wallet " + selectedWallet.publicKey.toBase58());
         loadCounts();
+        addLog("Connected to wallet " + selectedWallet.publicKey.toBase58());
       });
-      selectedWallet.on("disconnect", () => {
+      selectedWallet.once("disconnect", () => {
         setConnected(false);
+        setSelectedWallet(undefined);
         addLog("Disconnected from wallet");
       });
       selectedWallet.connect().catch((error) => {
@@ -35,8 +40,6 @@ export const Main: React.FC = () => {
       return () => {
         selectedWallet.disconnect();
       };
-    } else {
-      loadCounts();
     }
   }, [selectedWallet]);
 
@@ -55,7 +58,7 @@ export const Main: React.FC = () => {
       await counterProgram.increment(selectedWallet);
       await loadCounts();
     } catch (e) {
-      addLog("Error: " + e.message);
+      addLog("Error: " + e.toString());
     }
   };
 
@@ -64,7 +67,7 @@ export const Main: React.FC = () => {
       await counterProgram.decrement(selectedWallet);
       await loadCounts();
     } catch (e) {
-      addLog("Error: " + e.message);
+      addLog("Error: " + e.toString());
     }
   };
 
