@@ -103,7 +103,7 @@ export const Main: React.FC = () => {
             </Button>
           )}
         </div>
-        <div className="my-4 space-y-2 border p-6">
+        <div className="my-4 space-y-2 border p-4 sm:p-6 max-w-full overflow-hidden">
           <div>
             Status:{" "}
             <span className={isConnected ? "text-green-500" : "text-gray-600"}>
@@ -111,7 +111,7 @@ export const Main: React.FC = () => {
             </span>
           </div>
           {wallet?.publicAddress && (
-            <div>
+            <div className="truncate">
               Address: <span className="text-gray-600">{wallet.publicAddress}</span>
             </div>
           )}
@@ -121,9 +121,8 @@ export const Main: React.FC = () => {
             </p>
           )}
         </div>
-
-        <div className="w-full">
-          <h2 className="mt-4 mb-2 text-2xl">Logs</h2>
+        <div className="w-full overflow-hidden">
+          <h2 className="mt-4 mb-2 text-2xl px-4 sm:px-0">Logs</h2>
           <div className="border bg-gray-100 p-4">
             {logs.map((log, i) => (
               <div key={i}>

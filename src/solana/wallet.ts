@@ -1,6 +1,6 @@
-import { Cluster, PublicKey, Transaction } from "@solana/web3.js";
-import bs58 from "bs58";
 import EventEmitter from "eventemitter3";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import bs58 from "bs58";
 
 type ValueOf<T> = T[keyof T];
 
@@ -18,25 +18,8 @@ export class Wallet extends EventEmitter {
     [ValueOf<Pick<PromiseConstructor, "resolve">>, ValueOf<Pick<PromiseConstructor, "reject">>]
   >;
 
-  get publicAddress() {
-    return this._publicKey?.toBase58();
-  }
-
-  get publicKey() {
-    return this._publicKey;
-  }
-
-  get connected() {
-    return this._publicKey !== null;
-  }
-
-  get autoApprove() {
-    return this._autoApprove;
-  }
-
-  constructor(provider: string, networkCluster: Cluster) {
+  constructor(provider, network) {
     super();
-    const network = networkCluster; // clusterApiUrl(networkCluster);
     if (isInjectedProvider(provider)) {
       this._injectedProvider = provider;
     } else if (isString(provider) && typeof window !== "undefined") {
@@ -45,8 +28,8 @@ export class Wallet extends EventEmitter {
         origin: window.location.origin,
         network
       }).toString();
-    } else if (typeof window !== "undefined") {
-      throw new Error("provider parameter must be an injected provider or a URL string.");
+    } else {
+      // throw new Error("provider parameter must be an injected provider or a URL string.");
     }
     this._network = network;
     this._publicKey = null;
@@ -77,7 +60,6 @@ export class Wallet extends EventEmitter {
       } else if (e.data.result || e.data.error) {
         if (this._responsePromises.has(e.data.id)) {
           const [resolve, reject] = this._responsePromises.get(e.data.id);
-
           if (e.data.result) {
             resolve(e.data.result);
           } else {
@@ -124,8 +106,8 @@ export class Wallet extends EventEmitter {
     }
     const requestId = this._nextRequestId;
     ++this._nextRequestId;
-    return new Promise<any>((resolve: any, reject: any) => {
-      this._responsePromises.set(requestId, [resolve, reject]);
+    return new Promise<any>((resolve, reject) => {
+      this._responsePromises.set(requestId, [resolve, reject] as any);
       if (this._injectedProvider) {
         this._injectedProvider.postMessage({
           jsonrpc: "2.0",
@@ -146,13 +128,25 @@ export class Wallet extends EventEmitter {
           },
           this._providerUrl.origin
         );
-
-        if (!this.autoApprove) {
-          this._popup.focus();
-        }
       }
     });
   };
+
+  get publicKey() {
+    return this._publicKey;
+  }
+
+  get connected() {
+    return this._publicKey !== null;
+  }
+
+  get autoApprove() {
+    return this._autoApprove;
+  }
+
+  get publicAddress() {
+    return this._publicKey?.toBase58();
+  }
 
   connect = () => {
     if (this._popup) {
@@ -174,6 +168,28 @@ export class Wallet extends EventEmitter {
       this._popup.close();
     }
     this._handleDisconnect();
+  };
+
+  sign = async (data, display) => {
+    if (!(data instanceof Uint8Array)) {
+      throw new Error("Data must be an instance of Uint8Array");
+    }
+
+    const response = await this._sendRequest("sign", {
+      data,
+      display
+    });
+
+    if (!this.autoApprove || !response.didAutoApprove) {
+      this._popup.focus();
+    }
+
+    const signature = bs58.decode(response.signature);
+    const publicKey = new PublicKey(response.publicKey);
+    return {
+      signature,
+      publicKey
+    };
   };
 
   signTransaction = async (transaction: Transaction) => {
